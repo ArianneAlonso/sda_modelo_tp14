@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Predicción de una cuadrática</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { text-align: center; padding: 20px; background-color: pink; }
+    input { padding: 10px; margin-bottom: 10px; }
+    button { padding: 10px 20px; }
+    canvas { max-width: 600px; margin: 20px auto; }
+  </style>
+</head>
+<body>
+  <h1><strong>predecir la x de: y = 2x² - 3x + 1</strong></h1>
+  <input type="number" id="entradaY" placeholder="Ingrese un valor Y">
+  <div>
+    <button onclick="entrenarModelo()">Entrenar</button>
+    <button onclick="predecir()">Predecir X₁ y X₂</button>
+  </div>
+  <p id="resultado">El modelo aún no está entrenado.</p>
+
+  <canvas id="graficoPerdida"></canvas>
+
+  <script>
+    let modelo;
+    let valoresPerdida = [];
+
+    async function entrenarModelo() {
+      document.getElementById('resultado').innerText = 'Entrenando modelo...';
+
+      // creacion del modelo
+      modelo = tf.sequential();
+      modelo.add(tf.layers.dense({ units: 16, activation: 'relu', inputShape: [1] }));
+      modelo.add(tf.layers.dense({ units: 16, activation: 'relu' }));
+      modelo.add(tf.layers.dense({ units: 2 })); // Salida: [x1, x2]
+
+      modelo.compile({
+        loss: 'meanSquaredError',
+        optimizer: tf.train.adam(0.01)
+      });
+
+      // Generar los valores
+      const valoresY = [];
+      const raicesX = [];
+
+      for (let x = -10; x <= 10; x += 0.1) {
+        const y = 2 * x * x - 3 * x + 1;
+
+        const a = 2;
+        const b = -3;
+        const c = 1 - y;
+        const discriminante = b * b - 4 * a * c;
+
+        if (discriminante >= 0) {
+          const raiz = Math.sqrt(discriminante);
+          const x1 = (-b + raiz) / (2 * a);
+          const x2 = (-b - raiz) / (2 * a);
+
+          valoresY.push(y);
+          raicesX.push([x1, x2]);
+        }
+      }
+
+      const tensoresY = tf.tensor2d(valoresY, [valoresY.length, 1]); // Entrada: Y
+      const tensoresX = tf.tensor2d(raicesX, [raicesX.length, 2]);   // Salida: [x1, x2]
+
+      await modelo.fit(tensoresY, tensoresX, {
+        epochs: 300,
+        shuffle: true,
+        callbacks: {
+          onEpochEnd: (epoca, logs) => {
+            valoresPerdida.push({ epoca: epoca + 1, perdida: logs.loss });
+            if ((epoca + 1) % 50 === 0) {
+              console.log(`Época ${epoca + 1}: Pérdida = ${logs.loss}`);
+            }
+          }
+        }
+      });
+
+      document.getElementById('resultado').innerText = 'Modelo entrenado. Ya puede predecir ambas raíces.';
+      graficarPerdida();
+    }
+
+    function predecir() {
+      if (!modelo) {
+        document.getElementById('resultado').innerText = 'Primero debe entrenar el modelo.';
+        return;
+      }
+
+      const valorY = parseFloat(document.getElementById('entradaY').value);
+      if (isNaN(valorY)) {
+        document.getElementById('resultado').innerText = 'Ingrese un número válido.';
+        return;
+      }
+
+      const entrada = tf.tensor2d([valorY], [1, 1]);
+      const salida = modelo.predict(entrada).dataSync();
+
+      const x1 = salida[0];
+      const x2 = salida[1];
+
+      document.getElementById('resultado').innerText =
+        `Para Y = ${valorY}, el modelo predice:\nX₁ ≈ ${x1.toFixed(3)}\nX₂ ≈ ${x2.toFixed(3)}`;
+    }
+
+    function graficarPerdida() {
+      const contexto = document.getElementById('graficoPerdida').getContext('2d');
+      new Chart(contexto, {
+        type: 'line',
+        data: {
+          labels: valoresPerdida.map(p => p.epoca),
+          datasets: [{
+            label: 'Pérdida (Loss)',
+            data: valoresPerdida.map(p => p.perdida),
+            borderColor: 'rgb(75, 192, 192)',
+            fill: false,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Gráfico de pérdida durante el entrenamiento'
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Época' }
+            },
+            y: {
+              title: { display: true, text: 'Pérdida' }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
