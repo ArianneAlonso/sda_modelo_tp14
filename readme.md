@@ -1,6 +1,4 @@
-# 📈 Predicción de raíces de una función cuadrática con TensorFlow.js
-
-Este proyecto es una aplicación web interactiva desarrollada con **HTML**, **JavaScript**, **TensorFlow.js** y **Chart.js**, que entrena un modelo de red neuronal para **predecir las raíces reales** (𝑥₁ y 𝑥₂) de una función cuadrática de la forma:
+Predicción de raíces de una función cuadrática con TensorFlow.js desarrollada con **HTML**, **JavaScript**, **TensorFlow.js** y **Chart.js**, que entrena un modelo de red neuronal para **predecir las raíces reales** (𝑥₁ y 𝑥₂) de una función cuadrática de la forma:
 
 y = 2x² - 3x + 1
 
@@ -10,8 +8,7 @@ Dado un valor de **Y**, el modelo predice qué valores de **X** (raíces reales)
 - Permite al usuario **predecir** las raíces correspondientes a un valor de entrada Y.
 - Muestra el **gráfico de pérdida** durante el entrenamiento, para visualizar el aprendizaje del modelo.
 
-## 📂 Estructura del HTML
-
+Estructura del HTML
 ```html
 <body>
   <h1>Modelo: y = 2x² - 3x + 1 (ambas raíces)</h1>
