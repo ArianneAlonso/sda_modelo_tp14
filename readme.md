@@ -18,6 +18,7 @@ Estructura del HTML
   <p id="resultado"></p>
   <canvas id="graficoPerdida"></canvas>
 </body>
+```
 
 input: Campo para ingresar el valor de Y.
 Botones: Entrena el modelo o predice las raíces.
